@@ -250,7 +250,8 @@ Returns: Nothing. `dest_dict` is mutated and now has merge changes. Only the fir
 
 ## Authors
 
-* **Kenny Au** <<glumpyfish@gmail.com>>
+* **Nathaniel Adams** <<nathaniel.adams@berkeley.edu>>
+* **Kenny Au** - *original author* - <<glumpyfish@gmail.com>>
 
 ## License
 
