@@ -41,7 +41,7 @@ func dispatch(action: Dictionary) -> void:
             _state[name] = next_state
             emit_signal('state_changed', name, next_state)
 
-func get() -> Dictionary:
+func get_state() -> Dictionary:
     return _state
 
 func shallow_copy(dict: Dictionary) -> Dictionary:
