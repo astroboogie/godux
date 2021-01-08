@@ -18,12 +18,12 @@ Using the redux architecture allows for some interesting features:
 
 ## Installation
 
-* Autoload `store.gd` from "Scene > Project Settings > AutoLoad" so that it is loaded first.
-* Attach `main.gd` to a root node, or a node that loads before any of the actions are used.
+* Add the files from the [src](src) folder to your project.
+* Make `store.gd` a singleton using "Scene > Project Settings > AutoLoad".
 
 ## Usage
 
-A common implementation is to create and autoload the following scripts:
+A useful implementation is to create the following scripts as singletons:
 * `action_types.gd`
 * `actions.gd`
 * `reducers.gd`
