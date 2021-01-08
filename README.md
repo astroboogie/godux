@@ -119,9 +119,15 @@ Subscriber functions are called whenever the state is changed. These are useful 
 
 Functions can be subscribed to the state by calling `store.subscribe()` and passing the node where the function is located, and the name of the function. The subscribed function only begins listening to state changes after store.subscribe() is called, so be aware of the [tree order](https://docs.godotengine.org/en/stable/getting_started/step_by_step/scene_tree.html#tree-order) when making state changes when the scene tree is first initialized.
 
+The subscribe() function returns a `Closure` which can be used to unsubscribe the same function. To do so, you can call `call_funcv()` on the return value of subscribe(). You can also call `store.unsubscribe()` directly with the node where the function is located and the function name as arguments.
+
 ```GDScript
 func _ready():
-    store.subscribe(self, "print_pause_state")
+    # This will subscribe print_pause_state() to the store.
+    var unsubscribe = store.subscribe(self, "print_pause_state")
+
+    # This will unsubscribe print_pause_state() from the store.
+    unsubscribe.call_funcv()
 
 func print_pause_state(reducer, difference):
     if reducer == 'game' and 'paused' in difference:
