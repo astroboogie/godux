@@ -24,9 +24,10 @@ func create(reducers: Array, callbacks : Array = []) -> void:
         for callback in callbacks:
             subscribe(callback['instance'], callback['name'])
 
-func subscribe(target: Node, method: String) -> void:
+func subscribe(target: Node, method: String) -> Closure:
     # warning-ignore:return_value_discarded
     connect('state_changed', target, method)
+    return Closure.new(self, "unsubscribe", [target, method])
 
 func unsubscribe(target: Node, method: String) -> void:
     disconnect('state_changed', target, method)
