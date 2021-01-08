@@ -62,12 +62,10 @@ The way to change the state is to create an _action_, an `Dictionary` object des
 Actions must have a `type` property, and are deployed with an _action creator_, a function which returns the action.
 
 ```GDScript
-func players_update_position(id, position_x, position_y):
+func game_update_paused(paused):
     return {
-        'type': 'PLAYERS_UPDATE_POSITION',
-        'id': id
-        'position_x': position_x,
-        'position_y': position_y
+        'type': 'GAME_UPDATE_PAUSED',
+        'paused': paused
     }
 ```
 
@@ -84,9 +82,9 @@ func _ready():
         {'name': 'players', 'instance': reducers}
     ])
 
-    # new_action calls players_update_position(), a function we created that returns
+    # game_update_paused() is called, an action creator that returns
     # an action dictionary that we can dispatch.
-    var new_action = actions.players_update_position('player1', 5, 10)
+    var new_action = actions.game_update_paused(true)
     store.dispatch(new_action)
 ```
 
@@ -95,18 +93,17 @@ func _ready():
 Reducers consume dispatched actions and create a new state object to be applied to the store. Reducers are pure functions that take 2 parameters: the last known state and an action.
 
 When you create a reducer, it is important that it is a pure function. Specifically:
+
 * The state is _read-only_, so the reducer must construct a new `state` object or return the unchanged `state` argument.
 * The return value must be the same given the same arguments. Impure functions cannot be used within a reducer.
 
 ```GDScript
-func players(state, action):
-    if action['type'] == 'PLAYERS_UPDATE_POSITION':
-        var players_state = store.shallow_copy(state[action['id']])
-        players_state['position_x'] = action['position_x']
-        players_state['position_y'] = action['position_y']
+onready var store := get_node('/root/store')
 
+func game(state, action):
+    if action['type'] == 'GAME_UPDATE_PAUSED':
         var new_state = store.shallow_copy(state)
-        new_state[action['id']] = player_state
+        new_state['paused'] = action['paused']
         return new_state
     
     return state
@@ -114,7 +111,25 @@ func players(state, action):
 
 ### Subscribers
 
-Subscriber functions are called whenever the state is changed. These are useful for listening to changes to the global state from any file in your game. Subscriber functions take the reducer name and the updated state as arguments.
+Subscriber functions are called whenever the state is changed. These are useful for listening to changes to the global state from any file in your game. Functions that are subscribed to the store will receive the reducer name and the _difference_ between the previous state and the current state as arguments. The difference includes:
+
+* Additions to the state
+* Removals from the state
+* Changes to state values
+
+Functions can be subscribed to the state by calling `store.subscribe()` and passing the node where the function is located, and the name of the function. The subscribed function only begins listening to state changes after store.subscribe() is called, so be aware of the [tree order](https://docs.godotengine.org/en/stable/getting_started/step_by_step/scene_tree.html#tree-order) when making state changes when the scene tree is first initialized.
+
+```GDScript
+func _ready():
+    store.subscribe(self, "print_pause_state")
+
+func print_pause_state(reducer, difference):
+    if reducer == 'game' and 'paused' in difference:
+        if difference['paused'] == true:
+            print('The game is paused')
+        else:
+            print('The game is unpaused')
+```
 
 ## Example
 
