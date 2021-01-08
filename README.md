@@ -1,78 +1,126 @@
-# Redux for Godot
+<h1 align="center">
+    <img src="icon.png" alt="Godot" height="60"/>
+</h1>
 
-<img src="https://raw.githubusercontent.com/godotengine/godot/master/icon.png" alt="Godot" height="100" width="100"/><img src="https://raw.githubusercontent.com/reactjs/redux/master/logo/logo.png" alt="Redux" height="100" width="100"/>
+<div align="center">
+    A state management library written in GDScript inspired by <a href="https://redux.js.org">Redux</a>.
+</div>
 
-Redux for Godot is a tool written in GDScript for handling state management. It is completely inspired by the [Redux javascript package](http://redux.js.org).
+<div>&nbsp;</div>
 
-Working with Godot's scene structure and dynamically typed script language, the challenges of state mutation and organization are similar to those encountered when building a web app in React.
-Instead of littering all component nodes with game state, which can be unruly and confusing for larger projects, we can consolidate all state into a single store and govern write-access through the use of discrete actions and reducers.
+Godux helps Godot developers consolidate game state into a single store. Communicating between nodes in your project becomes increasingly difficult the more complex your project becomes. Instead of littering all component nodes with game state, which can be unruly and confusing for larger projects, we can use a single source of information in order to easily access all data in your game from any node.
 
-Using the redux architecture also allows for some interesting features:
+Using the redux architecture allows for some interesting features:
 * Saving and loading saved games becomes trivial.
-* Time travel (i.e. undo/redo actions).
+* Undo/redoing actions.
+* Event notifications.
+* Quest tracking.
 
-Knowledge about the javascript version of Redux is recommended. Refer to the [Redux javascript docs](http://redux.js.org) for a more detailed reference.
+## Installation
+
+* Autoload `store.gd` from "Scene > Project Settings > AutoLoad" so that it is loaded first.
+* Attach `main.gd` to a root node, or a node that loads before any of the actions are used.
 
 ## Usage
 
-The following files can be added to "Scene > Project Settings > AutoLoad" so that they are loaded first:
-* `store.gd`
+A common implementation is to create and autoload the following scripts:
 * `action_types.gd`
 * `actions.gd`
 * `reducers.gd`
 
-The `main.gd` script should then be attached to a root node, or a node that loads before any of the actions are used.
+For a demo, see the [examples](examples) folder.
 
-## Basics
+### Store
+
+The store is your main entry point for using Godux. You can create a store with `store.create()`.
+
+#### State
+
+The global state of your game is a `Dictionary` object in the store. It can be accessed with `store.get_state()`.
+
+```GDScript
+{
+    'game': {
+        'paused': false
+    }
+    'players': {
+        'player1': {
+            'id': 'player1',
+            'name': 'Jane',
+            'position_x': 0,
+            'position_y': 0,
+            'moving': true
+        }
+    },
+}
+```
 
 ### Actions
 
-Actions are dictionary objects sent to the store and are the only source of information for the store. They are sent using the `store.dispatch()` function.
+The way to change the state is to create an _action_, an `Dictionary` object describing the changes you want to make, and _dispatch_ it to the store. To dispatch an action, you use `store.dispatch()`.
 
-Actions must have a `type` property. Apart from that, any other property related to the action can be included.
+Actions must have a `type` property, and are deployed with an _action creator_, a function which returns the action.
 
-```
-func example_action(value1, value2):
+```GDScript
+func players_update_position(id, position_x, position_y):
     return {
-        'type': 'EXAMPLE_ACTION_TYPE',
-        'key1': value1,
-        'key2': value2
+        'type': 'PLAYERS_UPDATE_POSITION',
+        'id': id
+        'position_x': position_x,
+        'position_y': position_y
     }
+```
+
+We can then dispatch an action to our store via `store.dispatch()` from a non-singleton script. This is due to singletons being processed last in the [tree order](https://docs.godotengine.org/en/stable/getting_started/step_by_step/scene_tree.html#tree-order).
+
+```GDScript
+onready var actions := get_node('/root/actions')
+onready var reducers := get_node('/root/reducers')
+onready var store := get_node('/root/store')
+
+func _ready():
+    store.create([
+        {'name': 'game', 'instance': reducers},
+        {'name': 'players', 'instance': reducers}
+    ])
+
+    # new_action calls players_update_position(), a function we created that returns
+    # an action dictionary that we can dispatch.
+    var new_action = actions.players_update_position('player1', 5, 10)
+    store.dispatch(new_action)
 ```
 
 ### Reducers
 
-Reducers respond to the actions that are dispatched to the store and are responsible for applying the changes needed to the store.
+Reducers consume dispatched actions and create a new state object to be applied to the store. Reducers are pure functions that take 2 parameters: the last known state and an action.
 
-Reducers are pure functions that take 2 parameters: the last known state and an action. It outputs a new state. It is important that the reducer does not mutate the previous state. It must either return the previous state as is (the default case), or create a new dictionary to house the new state. The calculation performed by the reducer must be predictable and repeatable and cannot depend on anything else that may produce a different output given the same inputs.
+When you create a reducer, it is important that it is a pure function. Specifically:
+* The state is _read-only_, so the reducer must construct a new `state` object or return the unchanged `state` argument.
+* The return value must be the same given the same arguments. Impure functions cannot be used within a reducer.
 
-```
-func example_reducer(state, action):
-    if action['type'] == 'EXAMPLE_ACTION_TYPE':
-        var next_state = util.shallow_copy(state)
-        next_state['key1'] = action['key1']
-        next_state['key2'] = action['key2']
-        return next_state
+```GDScript
+func players(state, action):
+    if action['type'] == 'PLAYERS_UPDATE_POSITION':
+        var players_state = store.shallow_copy(state[action['id']])
+        players_state['position_x'] = action['position_x']
+        players_state['position_y'] = action['position_y']
+
+        var new_state = store.shallow_copy(state)
+        new_state[action['id']] = player_state
+        return new_state
+    
     return state
 ```
 
 ### Subscribers
 
-Callback functions can be specified at the time of store creation or individually at a later time. They are called whenever the state is changed. Due to the static nature of Godot's signal definitions, subscribers will receive all state changes throughout the app. To help with this, the reducer name is passed to the callback so it can choose to respond to the appropriate changes.
-
-### Store
-
-The store is the object that glues everything together:
-* It holds the game state
-* Allows access via `get()`
-* Allows state to be updated via `dispatch(action)`
-* Registers handlers via `subscribe(target, name)`
-* Unregisters handlers via `unsubscribe(target, name)`
+Subscriber functions are called whenever the state is changed. These are useful for listening to changes to the global state from any file in your game. Subscriber functions take the reducer name and the updated state as arguments.
 
 ## Example
 
 A good way to start with redux is by planning what your store will look like. The store is a dictionary of dictionaries where the first level keys (`game`, `players`, `gui`, `stats`, `dungeon1`) are reducers. Here is an example that shows some possible ideas:
-```
+
+```GDScript
 {
     'game': {
         'paused': false
@@ -100,10 +148,12 @@ A good way to start with redux is by planning what your store will look like. Th
     }
 }
 ```
-It is best if the data is normalized (as flat as possible). Often the tree is only 2 or 3 levels deep.
+
+It is best if the data is normalized, or as flat as possible. Often the tree is only 2 or 3 levels deep.
 
 Once you have a basic store schema, you can plan some action types. A common practice is to create constants and make them equal to strings of the same name. The naming scheme tends to be NOUN_VERB.
-```
+
+```GDScript
 const GAME_PAUSE = 'GAME_PAUSE'
 const GAME_UNPAUSE = 'GAME_UNPAUSE'
 const PLAYER_MOVE_START = 'PLAYER_MOVE_START'
@@ -112,8 +162,10 @@ const PLAYER_MOVE_END = 'PLAYER_MOVE_END'
 const TIMER_START = 'TIMER_START'
 const TIMER_STOP = 'TIMER_STOP'
 ```
-Creating the actions then allows us to specify what information each action needs.
-```
+
+We then create the actions which allow us to specify what information each action needs.
+
+```GDScript
 function game_pause():
     return { 'type': GAME_PAUSE }
 
@@ -135,8 +187,10 @@ function timer_start(time):
 function timer_stop():
     return { 'type': TIMER_STOP }
 ```
+
 Reducers can now be defined. They receive the previous state (for that particular reducer) and the action. The return value must be either the same state (which should always be the default case), or a completely new dictionary object for the given action. Even if the new state is very similar to the old state, the new state must be a separate copy.  If the state needs to be complex, we can use strategic shallow copies to avoid churn from too much object cloning.
-```
+
+```GDScript
 function game(state, action):
     if action['type'] == GAME_PAUSE:
         return {'paused': true}
@@ -190,7 +244,7 @@ function on_pause_button_click():
 
 ## API
 
-### store.get()
+### store.get_state()
 
 No parameters.
 
