@@ -1,5 +1,3 @@
-# This is a singleton. Autoload it through "Scene > Project Settings > AutoLoad."
-
 extends Node
 
 signal state_changed(reducer, difference)
@@ -24,9 +22,9 @@ func create(reducers: Array, callbacks : Array = []) -> void:
         for callback in callbacks:
             subscribe(callback['instance'], callback['name'])
 
-func subscribe(target: Node, method: String) -> void:
-    # warning-ignore:return_value_discarded
+func subscribe(target: Node, method: String) -> Closure:
     connect('state_changed', target, method)
+    return Closure.new(self, "unsubscribe", [target, method])
 
 func unsubscribe(target: Node, method: String) -> void:
     disconnect('state_changed', target, method)
@@ -37,7 +35,6 @@ func dispatch(action: Dictionary) -> void:
         var next_state : Dictionary = _reducers[name].call_func(state, action)
         var difference : Dictionary = _dictionary_difference(state, next_state)
         if next_state == null:
-            # warning-ignore:return_value_discarded
             _state.erase(name)
             emit_signal('state_changed', null, null)
         elif state != next_state:
