@@ -169,7 +169,7 @@ Parameter | Required | Description | Example
 `target` | Yes | Object containing the callback function. | `self`
 `method` | Yes | String of the callback function name. | `'callback_function'`
 
-Returns: Nothing
+Returns: Closure object. Calling `call_funcv()` on this object will unsubscribe the subscribed method.
 
 ### store.unsubscribe(target, method)
 
@@ -187,15 +187,6 @@ Parameter | Required | Description | Example
 `dict` | Yes | Dictionary to be cloned. | `{ 'key1' : 'value1' }`
 
 Returns: A copy of the dictionary, however only the first level of keys are cloned.
-
-### store.shallow_merge(src_dict, dest_dict)
-
-Parameter | Required | Description | Example
---- | --- | --- | ---
-`src_dict` | Yes | Dictionary to merge. | `{ 'key' : 'new_value' }`
-`dest_dict` | Yes | Dictionary affected by merge. | `{ 'key' : 'old_value' }`
-
-Returns: Nothing. `dest_dict` is mutated and now has merge changes. Only the first level of keys is copied. Later levels are referenced.
 
 ## Authors
 
