@@ -10,6 +10,8 @@
 
 Godux helps Godot developers consolidate game state into a single store. Communicating between nodes in your project becomes increasingly difficult the more complex your project becomes. Instead of littering all component nodes with game state, which can be unruly and confusing for larger projects, we can use a single source of information in order to easily access all data in your game from any node.
 
+This is a revived project built from Kenny Au's [godot-redux](https://github.com/glumpyfish/godot_redux).
+
 Using the redux architecture allows for some interesting features:
 * Saving and loading saved games becomes trivial.
 * Undo/redoing actions.
@@ -188,7 +190,7 @@ Parameter | Required | Description | Example
 
 Returns: A copy of the dictionary, however only the first level of keys are cloned.
 
-## Authors
+## Contributors
 
 * **Nathaniel Adams** <<nathaniel.adams@berkeley.edu>>
 * **Kenny Au** - *original author* - <<glumpyfish@gmail.com>>
