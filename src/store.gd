@@ -5,12 +5,13 @@ signal state_changed(reducer, difference)
 var _state := {}
 var _reducers := {}
 
+# Initializes the global state and the reducers.
 func create(reducers: Array, callbacks : Array = []) -> void:
     for reducer in reducers:
         var name : String = reducer['name']
-        if not _state.has(name):
+        if !_state.has(name):
             _state[name] = {}
-        if not _reducers.has(name):
+        if !_reducers.has(name):
             _reducers[name] = funcref(reducer['instance'], name)
             var initial_state : Dictionary = _reducers[name].call_func(
                 _state[name],
@@ -22,18 +23,21 @@ func create(reducers: Array, callbacks : Array = []) -> void:
         for callback in callbacks:
             subscribe(callback['instance'], callback['name'])
 
+# Makes the method in the target node a state listener.
 func subscribe(target: Node, method: String) -> Closure:
     connect('state_changed', target, method)
     return Closure.new(self, "unsubscribe", [target, method])
 
+# Disconnects the method in the target node as a state listener.
 func unsubscribe(target: Node, method: String) -> void:
     disconnect('state_changed', target, method)
 
+# Dispatches an action.
 func dispatch(action: Dictionary) -> void:
     for name in _reducers.keys():
         var state : Dictionary = _state[name]
         var next_state : Dictionary = _reducers[name].call_func(state, action)
-        var difference : Dictionary = _dictionary_difference(state, next_state)
+        var difference : Dictionary = _dictionary_difference(state, next_state, true)
         if next_state == null:
             _state.erase(name)
             emit_signal('state_changed', null, null)
@@ -41,10 +45,12 @@ func dispatch(action: Dictionary) -> void:
             _state[name] = next_state
             emit_signal('state_changed', name, difference)
 
+# Returns the store's state.
 func get_state() -> Dictionary:
     return _state
 
-
+# Returns a dictionary containing 'op,' the type of difference between d1 and
+# d2, and 'diff,' a dictionary representing changes between d1 and d2.
 func _dictionary_difference(d1: Dictionary, d2: Dictionary, root := false) -> Dictionary:
     var d3 := {}
     if root:
@@ -80,6 +86,7 @@ func _dictionary_difference(d1: Dictionary, d2: Dictionary, root := false) -> Di
                 d3[key] = d2[key]
     return d3
 
+# Returns an array containing the differences between a1 and a2.
 func _array_difference(a1: Array, a2: Array) -> Array:
     var a3 := []
     for value in a1 + a2:
