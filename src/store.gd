@@ -52,13 +52,25 @@ func _shallow_merge(src_dict: Dictionary, dest_dict: Dictionary) -> Dictionary:
         dest_dict[i] = src_dict[i]
     return dest_dict
 
-func _dictionary_difference(d1: Dictionary, d2: Dictionary) -> Dictionary:
+func _dictionary_difference(d1: Dictionary, d2: Dictionary, root := false) -> Dictionary:
     var d3 := {}
+    if root:
+        d3['op'] = 'undefined'
+        d3['diff'] = {}
+    
     for key in d1.keys() + d2.keys():
         if !d1.has(key):
-            d3[key] = d2[key]
+            if root:
+                d3['op'] = 'add'
+                d3['diff'][key] = d2[key]
+            else:
+                d3[key] = d2[key]
         elif !d2.has(key):
-            d3[key] = d1[key]
+            if root:
+                d3['op'] = 'delete'
+                d3['diff'][key] = d1[key]
+            else:
+                d3[key] = d1[key]
         elif typeof(d1[key]) == TYPE_ARRAY and typeof(d2[key]) == TYPE_ARRAY:
             var new_array := _array_difference(d1[key], d2[key])
             if !new_array.empty():
@@ -68,7 +80,11 @@ func _dictionary_difference(d1: Dictionary, d2: Dictionary) -> Dictionary:
             if !new_dict.empty():
                 d3[key] = new_dict
         elif d1[key] != d2[key]:
-            d3[key] = d2[key]
+            if root:
+                d3['op'] = 'update'
+                d3['diff'][key] = d2[key]
+            else:
+                d3[key] = d2[key]
     return d3
 
 func _array_difference(a1: Array, a2: Array) -> Array:
