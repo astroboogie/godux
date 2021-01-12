@@ -7,7 +7,7 @@ onready var store := get_node('/root/store')
 
 func game(state, action):
 	if action['type'] == types.GAME_ADD_COINS:
-		var next_state = store.shallow_copy(state)
+		var next_state = state.duplicate()
 		if 'coins' in next_state:
 			next_state['coins'] += action['coins']
 		else:
@@ -18,7 +18,7 @@ func game(state, action):
 
 func quests(state, action):
 	if action['type'] == types.QUESTS_CREATE:
-		var next_state = store.shallow_copy(state)
+		var next_state = state.duplicate()
 		var quest_state = {
 			'description': action['description'],
 			'key': action['key'],
@@ -30,10 +30,10 @@ func quests(state, action):
 		return next_state
 	
 	if action['type'] == types.QUESTS_UPDATE:
-		var quest_state = store.shallow_copy(state[action['name']])
+		var quest_state = state[action['name']].duplicate()
 		quest_state['completed'] = action['completed']
 		
-		var new_state = store.shallow_copy(state)
+		var new_state = state.duplicate()
 		new_state[action['name']] = quest_state
 		return new_state
 	

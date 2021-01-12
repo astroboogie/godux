@@ -44,13 +44,6 @@ func dispatch(action: Dictionary) -> void:
 func get_state() -> Dictionary:
     return _state
 
-func shallow_copy(dict: Dictionary) -> Dictionary:
-    return _shallow_merge(dict, {})
-
-func _shallow_merge(src_dict: Dictionary, dest_dict: Dictionary) -> Dictionary:
-    for i in src_dict.keys():
-        dest_dict[i] = src_dict[i]
-    return dest_dict
 
 func _dictionary_difference(d1: Dictionary, d2: Dictionary, root := false) -> Dictionary:
     var d3 := {}
