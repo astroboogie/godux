@@ -132,8 +132,9 @@ func _ready():
     unsubscribe.call_funcv()
 
 func print_pause_state(reducer, difference):
-    if reducer == 'game' and 'paused' in difference:
-        if difference['paused'] == true:
+    var diff = difference['diff']
+    if reducer == 'game' and 'paused' in diff:
+        if diff['paused'] == true:
             print('The game is paused')
         else:
             print('The game is unpaused')
