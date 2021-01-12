@@ -104,7 +104,7 @@ onready var store := get_node('/root/store')
 
 func game(state, action):
     if action['type'] == 'GAME_UPDATE_PAUSED':
-        var new_state = store.shallow_copy(state)
+        var new_state = state.duplicate()
         new_state['paused'] = action['paused']
         return new_state
     
@@ -181,14 +181,6 @@ Parameter | Required | Description | Example
 `method` | Yes | String of the callback function name. | `'callback_function'`
 
 Returns: Nothing
-
-### store.shallow_copy(dict)
-
-Parameter | Required | Description | Example
---- | --- | --- | ---
-`dict` | Yes | Dictionary to be cloned. | `{ 'key1' : 'value1' }`
-
-Returns: A copy of the dictionary, however only the first level of keys are cloned.
 
 ## Contributors
 
