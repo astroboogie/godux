@@ -11,10 +11,16 @@ var prev_state := {}
 func _ready() -> void:
     store.subscribe(self, '_emit')
 
-func subscribe(target_instance: Node, target_method: String, args := []) -> void:
+func subscribe(target_instance: Node, target_method: String, args := []) -> Closure:
     connect('state_changed', target_instance, target_method)
     var reference := Closure.new(self, '_enhancer', [args])
     references.append(reference)
+
+    return Closure.new(self, "unsubscribe", [target_instance, target_method, reference])
+
+func unsubscribe(target_instance: Node, target_method: String, reference: Closure) -> void:
+    disconnect('state_changed', target_instance, target_method)
+    references.erase(reference)
 
 func _emit() -> void:
     var next_state : Dictionary = store.get_state()
