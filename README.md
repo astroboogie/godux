@@ -163,11 +163,13 @@ Subscribe Enhancers receive similar arguments to `store.subscribe()`. Additional
 
 ## API
 
-### store.get_state()
+### store.get_state([reducer])
 
-No parameters.
+Parameter | Required | Description | Example
+--- | --- | --- | ---
+`reducer` | No | String of the reducer name. | `'reducer'`
 
-Returns: Dictionary containing entire state.
+Returns: Dictionary containing entire state, or the state of the specified reducer.
 
 ### store.create(reducers, [callbacks])
 
