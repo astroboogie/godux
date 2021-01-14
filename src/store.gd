@@ -25,13 +25,13 @@ func create(reducers: Array, callbacks : Array = []) -> void:
             subscribe(callback['instance'], callback['name'])
 
 # Makes the method in the target node a state listener.
-func subscribe(target: Node, method: String) -> Closure:
-    connect('state_changed', target, method)
-    return Closure.new(self, "unsubscribe", [target, method])
+func subscribe(target_instance: Node, target_method: String) -> Closure:
+    connect('state_changed', target_instance, target_method)
+    return Closure.new(self, "unsubscribe", [target_instance, target_method])
 
 # Disconnects the method in the target node as a state listener.
-func unsubscribe(target: Node, method: String) -> void:
-    disconnect('state_changed', target, method)
+func unsubscribe(target_instance: Node, target_method: String) -> void:
+    disconnect('state_changed', target_instance, target_method)
 
 # Dispatches an action.
 func dispatch(action: Dictionary) -> void:
