@@ -8,9 +8,9 @@
 
 <div>&nbsp;</div>
 
-Godux helps Godot developers consolidate game state into a single store. Communicating between nodes in your project becomes increasingly difficult the more complex your project becomes. Instead of littering all component nodes with game state, which can be unruly and confusing for larger projects, we can use a single source of information in order to easily access all data in your game from any node.
+Godux helps Godot developers consolidate game state into a single store. Communicating between nodes in your project becomes increasingly difficult the more complex your project becomes. Instead of littering all component nodes with game state, which can be unruly and confusing for larger projects, you can use a single source of information in order to easily access all data in your game from any node.
 
-This is a revived project built from Kenny Au's [godot-redux](https://github.com/glumpyfish/godot_redux).
+This is a continuation of Kenny Au's [godot-redux](https://github.com/glumpyfish/godot_redux).
 
 Using the redux architecture allows for some interesting features:
 * Saving and loading saved games becomes trivial.
@@ -21,14 +21,14 @@ Using the redux architecture allows for some interesting features:
 ## Installation
 
 * Add the files from the [src](src) folder to your project.
-* Make `store.gd` a singleton using "Scene > Project Settings > AutoLoad".
+* Make `Store.gd` a singleton using "Scene > Project Settings > AutoLoad".
 
 ## Usage
 
 A useful implementation is to create the following scripts as singletons:
-* `action_types.gd`
-* `actions.gd`
-* `reducers.gd`
+* `ActionTypes.gd`
+* `Actions.gd`
+* `Reducers.gd`
 
 For a demo, see the [examples](examples) folder.
 
@@ -71,7 +71,7 @@ func game_update_paused(paused):
     }
 ```
 
-We can then dispatch an action to our store via `store.dispatch()` from a non-singleton script. This is due to singletons being processed last in the [tree order](https://docs.godotengine.org/en/stable/getting_started/step_by_step/scene_tree.html#tree-order).
+To dispatch an action to our store, use `store.dispatch()` from a non-singleton script. This is due to singletons being processed last in the [tree order](https://docs.godotengine.org/en/stable/getting_started/step_by_step/scene_tree.html#tree-order).
 
 ```GDScript
 onready var actions := get_node('/root/actions')
@@ -85,7 +85,7 @@ func _ready():
     ])
 
     # game_update_paused() is called, an action creator that returns
-    # an action dictionary that we can dispatch.
+    # an action dictionary that can be dispatched.
     var new_action = actions.game_update_paused(true)
     store.dispatch(new_action)
 ```
@@ -113,32 +113,53 @@ func game(state, action):
 
 ### Subscribers
 
-Subscriber functions are called whenever the state is changed. These are useful for listening to changes to the global state from any file in your game. Functions that are subscribed to the store will receive the reducer name and the _difference_ between the previous state and the current state as arguments. The difference includes:
+Subscriber functions are called whenever the state is changed. These are useful for listening to changes to the global state from any file in your game. 
 
-* Additions to the state
-* Removals from the state
-* Changes to state values
-
-Functions can be subscribed to the state by calling `store.subscribe()` and passing the node where the function is located, and the name of the function. The subscribed function only begins listening to state changes after store.subscribe() is called, so be aware of the [tree order](https://docs.godotengine.org/en/stable/getting_started/step_by_step/scene_tree.html#tree-order) when making state changes when the scene tree is first initialized.
+Functions can be subscribed to the state by calling `store.subscribe()`, passing the node where the function is located, and the name of the function. The subscribed function only begins listening to state changes after store.subscribe() is called, so be aware of the [tree order](https://docs.godotengine.org/en/stable/getting_started/step_by_step/scene_tree.html#tree-order) when making state changes when the scene tree is first initialized.
 
 The subscribe() function returns a `Closure` which can be used to unsubscribe the same function. To do so, you can call `call_funcv()` on the return value of subscribe(). You can also call `store.unsubscribe()` directly with the node where the function is located and the function name as arguments.
 
 ```GDScript
 func _ready():
     # This will subscribe print_pause_state() to the store.
-    var unsubscribe = store.subscribe(self, "print_pause_state")
+    var unsubscribe = store.subscribe(self, "state_updated")
 
     # This will unsubscribe print_pause_state() from the store.
     unsubscribe.call_funcv()
 
-func print_pause_state(reducer, difference):
-    var diff = difference['diff']
-    if reducer == 'game' and 'paused' in diff:
-        if diff['paused'] == true:
-            print('The game is paused')
-        else:
-            print('The game is unpaused')
+func state_updated():
+    var new_state = store.get_state()
+    print(new_state)
 ```
+
+#### Subscribe Enhancers
+
+The base subscribe method notifies listeners when the store updates. It does not specify which part of the store it listens to. Subscribe Enhancers can be used to specify what updates the subscriber function listens to. Godux provides the `Watch` subscribe enhancer. This enhancer lets you know what changed with an `object_path` argument. To use this class, autoload `Watch.gd`.
+
+```GDScript
+onready var watch := get_node('/root/watch')
+
+func _ready():
+    # Pass the object path as the third argument. The first key in
+    # the object path is the reducer, and each additional key
+    # is accessed with dot notation.
+    watch.subscribe(self, 'coins_updated', ['game.coins'])
+
+    # This will unsubscribe print_pause_state() from the store.
+    unsubscribe.call_funcv()
+
+func coins_updated(params: Dictionary):
+    var path = params['path']
+    if path != 'game.coins':
+        return
+
+    var prev_value = params['prev_value']
+    var next_value = params['next_value']
+    
+    print('%s changed from %s to %s', [path, prev_value, next_value])
+```
+
+Subscribe Enhancers receive similar arguments to `store.subscribe()`. Additional parameters are passed as a single array. Subscriber functions receive all arguments as a `Dictionary` with argument names as the keys of the dictionary.
 
 ## API
 
