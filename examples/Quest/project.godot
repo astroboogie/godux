@@ -13,9 +13,33 @@ _global_script_classes=[ {
 "class": "Closure",
 "language": "GDScript",
 "path": "res://godux/closure.gd"
+}, {
+"base": "Node",
+"class": "Godux",
+"language": "GDScript",
+"path": "res://godux/godux.gd"
+}, {
+"base": "Node",
+"class": "Store",
+"language": "GDScript",
+"path": "res://godux/store.gd"
+}, {
+"base": "Node",
+"class": "Subscriber",
+"language": "GDScript",
+"path": "res://godux/subscribe_enhancers/subscriber.gd"
+}, {
+"base": "Subscriber",
+"class": "Watch",
+"language": "GDScript",
+"path": "res://godux/subscribe_enhancers/watch.gd"
 } ]
 _global_script_class_icons={
-"Closure": ""
+"Closure": "",
+"Godux": "",
+"Store": "",
+"Subscriber": "",
+"Watch": ""
 }
 
 [application]
@@ -31,6 +55,8 @@ action_types="*res://godux/action_types.gd"
 reducers="*res://godux/reducers.gd"
 store="*res://godux/store.gd"
 closure="*res://godux/closure.gd"
+godux="*res://godux/godux.gd"
+watch="*res://godux/subscribe_enhancers/watch.gd"
 
 [input]
 

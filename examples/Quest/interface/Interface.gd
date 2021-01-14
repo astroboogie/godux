@@ -1,28 +1,25 @@
 extends Control
 
-onready var store := get_node('/root/store')
+onready var watch := get_node('/root/watch')
 
 func _ready():
-	store.subscribe(self, '_update_coins')
-	store.subscribe(self, '_update_quests')
+	watch.subscribe(self, '_update_coins', ['game.coins'])
+	watch.subscribe(self, '_update_quests', ['quests'])
 
-func _update_coins(name, difference):
-	if name != 'game':
+func _update_coins(params: Dictionary):
+	if params['path'] != 'game.coins':
 		return
 	
-	print(difference)
-	
-	if 'coins' in difference:
-		$Label.text = 'Coins: ' + String(difference['coins'])
+	$Label.text = 'Coins: ' + String(params['next_value'])
 
-func _update_quests(name, difference):
-	if name != 'quests':
+func _update_quests(params: Dictionary):
+	if params['path'] != 'quests':
 		return
 	
 	for child in $VBoxContainer.get_children():
 		child.queue_free()
-	
-	var quests = store.get_state()['quests']
+
+	var quests = params['next_value']
 	for quest_name in quests.keys():
 		var label = Label.new()
 		label.name = quest_name
